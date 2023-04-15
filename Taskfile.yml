@@ -63,6 +63,11 @@ tasks:
       - |
         npx prettier --write 'contracts/**/*.sol'
         npx prettier --write 'lib/**/*.sol'
+  publish:
+    desc: publish the package to npm (use -- --dry-run to pre flight)
+    cmds:
+      - |
+        npm publish --access public {{.CLI_ARGS}}
 
   git:sub:reset:
     desc: hard reset all submodules, foundry uses them to import deps
