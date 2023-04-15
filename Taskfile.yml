@@ -5,6 +5,7 @@ silent: true
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/tuskfiles"
+  DIAMOND_DEPLOY: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.cjs"
 
 dotenv: [".env"]
 
@@ -18,12 +19,26 @@ tasks:
         {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.5 -o tusk-jspkg.yml
         {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.5 -o tusk-hardhat.yml
 
-  release:patch:
-    desc: create patch release
+  release:tag:
+    desc: create a release tag and commit and push, defaults to a patch release
     cmds:
       - |
         tusk -q -f {{.TUSKS}}/tusk-jspkg.yml version-update {{.CLI_ARGS}}
-    
 
+  forge:update:forge-std:
+    desc: update the forge-std support contract library submodule
+    cmds:
+      - forge update lib/forge-std
 
+  build:
+    desc: build the contracts
+    cmds:
+      - forge build --sizes
 
+  prebuild:format:
+    desc: run source linters and formatters in write back mode
+    cmds:
+      - |
+        npx prettier --write 'contracts/**/*.sol'
+        npx prettier --write 'lib/**/*.sol'
+        npx prettier --write 'test/**/*.sol'

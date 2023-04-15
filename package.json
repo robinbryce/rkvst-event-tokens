@@ -1,0 +1,30 @@
+{
+  "name": "rkvst-event-tokens",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Mint ERC1155 NFT's for RKVST event receipts on any evm compatible chain",
+  "main": "dist/rkvst-event-tokens.cjs.js",
+  "module": "dist/rkvst-event-tokens.esm.js",
+  "browser": "dist/rkvst-event-tokens.umd.js",
+  "directories": {
+    "lib": "lib",
+    "contracts": "contracts",
+    "abi": "abi"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Robin Bryce <robin.bryce@rkvst.com",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@nomicfoundation/hardhat-foundry": "^1.0.1",
+    "@nomicfoundation/hardhat-toolbox": "^1.0.2",
+    "@polysensus/diamond-deploy": "^0.1.11",
+    "@solidstate/contracts": "^0.0.54",
+    "dotenv": "^16.0.3",
+    "hardhat-deploy": "^0.11.26",
+    "prettier": "^2.8.7",
+    "prettier-plugin-solidity": "^1.1.3"
+  }
+}

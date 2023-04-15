@@ -1,6 +1,16 @@
 [profile.default]
+solc_version = "0.8.18"
+optimizer = true
+verbosity = 4
 src = "contracts"
 libs = ["node_modules", "lib"]
 out = ".local/forge/out"
 cache_path = "./local/forge/cache"
 broadcast = "./local/forge/broadcast"
+fs_permissions = [
+  { access = "read", path = ".local/forge/out/DiamondLoupeFacet.sol"},
+  { access = "read", path = ".local/forge/out/OwnershiptFacet.sol"},
+  { access = "read", path = ".local/forge/out/ERC1155Facet.sol"},
+  { access = "read", path = ".local/forge/out/RKVSTAssetEventFacet.sol"},
+  { access = "read", path = ".local/forge/out/MerklePatriciaProofVerifierFacet.sol"}
+]
