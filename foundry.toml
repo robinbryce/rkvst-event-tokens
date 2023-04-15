@@ -1,0 +1,6 @@
+[profile.default]
+src = "contracts"
+libs = ["node_modules", "lib"]
+out = ".local/forge/out"
+cache_path = "./local/forge/cache"
+broadcast = "./local/forge/broadcast"

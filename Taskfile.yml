@@ -1,0 +1,29 @@
+---
+version: "3"
+silent: true
+
+vars:
+  CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
+  TUSKS: ".local/tuskfiles"
+
+dotenv: [".env"]
+
+tasks:
+  bootstrap:
+    desc: fetch pre-requisites for developer and ci/cd
+    cmds:
+      - |
+        mkdir -p {{.TUSKS}}
+        cd {{.TUSKS}}
+        {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.5 -o tusk-jspkg.yml
+        {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.5 -o tusk-hardhat.yml
+
+  release:patch:
+    desc: create patch release
+    cmds:
+      - |
+        tusk -q -f {{.TUSKS}}/tusk-jspkg.yml version-update {{.CLI_ARGS}}
+    
+
+
+
