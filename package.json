@@ -6,23 +6,26 @@
   "main": "dist/index.js",
   "types": "dist/types",
   "files": [
-    "README.md", "LICENSE.md", "SECURITY.md",
+    "README.md",
+    "LICENSE.md",
+    "SECURITY.md",
     "dist/*.js",
     "dist/types/*.d.ts",
     "dist/types/contracts/**/*.d.ts",
     "dist/types/factories/contracts/**/*.d.ts",
     "dist/types/factories/index.d.ts",
-
     "abi/**/*.json"
   ],
   "exports": {
-    "." :{
+    ".": {
       "types": "./dist/*.d.ts"
     }
   },
   "typesVersions": {
     ">4.0": {
-      ".": ["./dist/*.d.ts"]
+      ".": [
+        "./dist/*.d.ts"
+      ]
     }
   },
   "directories": {
@@ -39,7 +42,7 @@
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
     "@nomicfoundation/hardhat-foundry": "^1.0.1",
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
-    "@polysensus/diamond-deploy": "^0.1.11",
+    "@polysensus/diamond-deploy": "^0.1.13",
     "@rollup/plugin-commonjs": "^24.1.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
     "@solidstate/contracts": "^0.0.54",

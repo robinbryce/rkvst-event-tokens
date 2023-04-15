@@ -5,8 +5,9 @@ silent: true
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/tuskfiles"
-  DIAMOND_DEPLOY: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.cjs"
   FORGE_OUT_DIR: ".local/forge/out"
+  FACETS_EXCLUDE: abi/facets-exclude.json
+  DIAMOND_DEPLOY_JSON: '.local/diamond-deploy.json'
 
 dotenv: [".env"]
 
@@ -56,6 +57,73 @@ tasks:
         for d in $(ls -d {{.FORGE_OUT_DIR}}/*Facet.sol); do cp $d/*Facet.json abi/; done
         cp {{.FORGE_OUT_DIR}}/IERC*.sol/IERC*.json abi
         for d in $(ls -d {{.FORGE_OUT_DIR}}/IRKVST*.sol); do cp $d/IRKVST*.json abi/; done
+
+  build:facets-exclude:
+    desc: |
+      re generate the current diamond deploy exclusions
+
+      note: this command needs to be maintained to account for any new
+      collisions introduces in future changes. facet:collisions can help with
+      that.
+    cmds:
+      - |
+        npx diamond-deploy list \
+          -I facet -i {{.FORGE_OUT_DIR}} \
+          --collisions-only --format json \
+          | jq -r '[ .[] | select(.name=="ERC1155Facet") ]' \
+          | tee {{.FACETS_EXCLUDE}} \
+          || true
+
+  build:diamond-deploy:
+    desc: generate the deployable list of facets
+    cmds:
+      - |
+        npx diamond-deploy list \
+          -I facet -i {{.FORGE_OUT_DIR}} \
+          -n Diamond DiamondNew \
+          --exclude {{.FACETS_EXCLUDE}} \
+          --format json | tee {{.DIAMOND_DEPLOY_JSON}}
+
+  deploy:hh-new:
+    desc: deploy the contracts for a local hardhat server
+    cmds:
+      - |
+        npx diamond-deploy \
+          -u "{{.HARDHAT_URL}}" \
+          -d "hardhat:10" \
+          diamond-new \
+            --replace \
+            --gaslimit 3500000 \
+            --legacy \
+            --diamond-owner-key "hardhat:11" \
+            --diamond-init-name DiamondNew \
+            --diamond-init-args \
+              '[{"typeURIs": ["ASSET", "EVENT"]}]' \
+            -f {{.DIAMOND_DEPLOY_JSON}}
+
+  deploy:hh-up:
+    desc: |
+      make a hardhat upgrade diamond deploy
+    cmds:
+      - |
+        # for hardhat, as we reset lots it is likely the nonce is low so finding every time is fine.
+        PROXY_ADDRESS=$(npx diamond-deploy \
+          -u "{{.HARDHAT_URL}}" \
+          -d "hardhat:10" \
+          find)
+
+        npx diamond-deploy \
+          -u "{{.HARDHAT_URL}}" \
+          -d "hardhat:10" \
+          diamond-up \
+            --diamond-address ${PROXY_ADDRESS} \
+            --replace \
+            --gaslimit 3500000 \
+            --legacy \
+            --diamond-owner-key "hardhat:11" \
+            --ignore-names DiamondNew \
+            -f {{.DIAMOND_DEPLOY_JSON}}
+
 
   format:
     desc: run source linters and formatters in write back mode
