@@ -12,7 +12,8 @@
     "abi": "abi"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install"
   },
   "author": "Robin Bryce <robin.bryce@rkvst.com",
   "license": "MIT",
@@ -24,6 +25,7 @@
     "@solidstate/contracts": "^0.0.54",
     "dotenv": "^16.0.3",
     "hardhat-deploy": "^0.11.26",
+    "husky": "^8.0.3",
     "prettier": "^2.8.7",
     "prettier-plugin-solidity": "^1.1.3"
   }
