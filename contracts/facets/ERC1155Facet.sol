@@ -73,7 +73,6 @@ contract ERC1155Facet is
         uint256[] memory amounts,
         bytes memory data // whenNotPaused
     ) internal override {
-        // XXX: TODO: don't allow transfer of any tokens which are currently bound to open game sessions
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 

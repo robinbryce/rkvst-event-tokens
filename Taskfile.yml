@@ -92,6 +92,12 @@ tasks:
           --exclude {{.FACETS_EXCLUDE}} \
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
+  deploy:hh:
+    desc: clean and new deployment on hardhat
+    cmds:
+      - task: deploy:hh-prepare
+      - task: deploy:hh-new
+
   deploy:hh-prepare:
     desc: force restart the external hh server (requires go-tusk)
     cmds:
