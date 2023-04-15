@@ -5,9 +5,10 @@ silent: true
 vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/tuskfiles"
+  LOCAL_BIN: ".local/bin"
   FORGE_OUT_DIR: ".local/forge/out"
   FACETS_EXCLUDE: abi/facets-exclude.json
-  DIAMOND_DEPLOY_JSON: '.local/diamond-deploy.json'
+  DIAMOND_DEPLOY_JSON: 'dist/diamond-deploy.json'
 
 dotenv: [".env"]
 
@@ -20,6 +21,11 @@ tasks:
         cd {{.TUSKS}}
         {{.CURL_CICD_DEV}}/js/tusk-jspkg.yml?ref=v0.0.5 -o tusk-jspkg.yml
         {{.CURL_CICD_DEV}}/hardhat/tusk-hardhat.yml?ref=v0.0.5 -o tusk-hardhat.yml
+
+        mkdir -p {{.LOCAL_BIN}}
+        curl -sL https://git.io/tusk | bash -s -- -b {{.LOCAL_BIN}} latest
+
+        # go-task install runes can be found in .github/workflows/ci.yml
 
   release:tag:
     desc: create a release tag and commit and push, defaults to a patch release
@@ -42,6 +48,8 @@ tasks:
       - task: format
       - forge build --sizes
       - task build:forge:export-abi
+      - task: build:facets-exclude
+      - task: build:diamond-deploy-json
       # generate the typescript bindings
       - npx hardhat compile
       - npx tsc
@@ -74,7 +82,7 @@ tasks:
           | tee {{.FACETS_EXCLUDE}} \
           || true
 
-  build:diamond-deploy:
+  build:diamond-deploy-json:
     desc: generate the deployable list of facets
     cmds:
       - |
@@ -83,6 +91,13 @@ tasks:
           -n Diamond DiamondNew \
           --exclude {{.FACETS_EXCLUDE}} \
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
+
+  deploy:hh-prepare:
+    desc: force restart the external hh server (requires go-tusk)
+    cmds:
+      - |
+        tusk -f {{.TUSKS}}/tusk-hardhat.yml stop-node
+        tusk -f {{.TUSKS}}/tusk-hardhat.yml start-node
 
   deploy:hh-new:
     desc: deploy the contracts for a local hardhat server

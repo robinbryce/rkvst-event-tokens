@@ -1,0 +1,47 @@
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+name: ci
+jobs:
+  test:
+    name: ci build & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: bootstrap (install go-task and run task bootstrap)
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/bin
+
+          # go-task
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- \
+            -d -b $GITHUB_WORKSPACE/bin
+
+          task bootstrap
+
+      - name: Setup node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.15.0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          repository: robinbryce/rkvst-event-tokens
+          submodules: recursive
+
+      - name: install
+        run: npm install
+
+      - name: build
+          run: task build
+
+      - name: integration test
+          run: |
+            task deploy:hh-prepare
+            task deploy:hh-new
