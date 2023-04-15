@@ -52,10 +52,7 @@ contract ERC1155Facet is
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public
-        whenNotPaused
-        onlyOwner
-    {
+    ) public whenNotPaused onlyOwner {
         _mint(account, id, amount, data);
     }
 
@@ -64,10 +61,7 @@ contract ERC1155Facet is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public
-        whenNotPaused
-        onlyOwner
-    {
+    ) public whenNotPaused onlyOwner {
         _mintBatch(to, ids, amounts, data);
     }
 
@@ -77,9 +71,8 @@ contract ERC1155Facet is
         address to,
         uint256[] memory ids,
         uint256[] memory amounts,
-        bytes memory data
-    ) internal override // whenNotPaused
-    {
+        bytes memory data // whenNotPaused
+    ) internal override {
         // XXX: TODO: don't allow transfer of any tokens which are currently bound to open game sessions
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
@@ -104,7 +97,7 @@ contract ERC1155Facet is
     )
         public
         view
-        override (ERC1155Base, IERC1155)
+        override(ERC1155Base, IERC1155)
         returns (
             // whenNotPaused
             bool isOperator
