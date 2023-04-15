@@ -6,6 +6,7 @@ vars:
   CURL_CICD_DEV: "curl -s -H 'Accept: application/vnd.github.v3.raw' -L https://api.github.com/repos/polysensus/cicd-dev-infra/contents"
   TUSKS: ".local/tuskfiles"
   DIAMOND_DEPLOY: "node node_modules/@polysensus/diamond-deploy/dist/deploycli.cjs"
+  FORGE_OUT_DIR: ".local/forge/out"
 
 dotenv: [".env"]
 
@@ -31,14 +32,39 @@ tasks:
       - forge update lib/forge-std
 
   build:
-    desc: build the contracts
-    cmds:
-      - forge build --sizes
+    desc: |
+      build the contracts and copy the abis in to packaged directory
 
-  prebuild:format:
+      (Note: once the contracts are verified we can get the abi from public sources)
+
+    cmds:
+      - task: format
+      - forge build --sizes
+      - task build:forge:export-abi
+      # generate the typescript bindings
+      - npx hardhat compile
+      - npx tsc
+      - npx rollup -c
+
+  build:forge:export-abi:
+    desc: copy the abis for the contracts defined in this repo to the packaged abi folder.
+    cmds:
+      - |
+        echo "copying abi files from build"
+        cp {{.FORGE_OUT_DIR}}/Diamond.sol/Diamond.json abi/
+        cp {{.FORGE_OUT_DIR}}/DiamondNew.sol/DiamondNew.json abi/
+        for d in $(ls -d {{.FORGE_OUT_DIR}}/*Facet.sol); do cp $d/*Facet.json abi/; done
+        cp {{.FORGE_OUT_DIR}}/IERC*.sol/IERC*.json abi
+        for d in $(ls -d {{.FORGE_OUT_DIR}}/IRKVST*.sol); do cp $d/IRKVST*.json abi/; done
+
+  format:
     desc: run source linters and formatters in write back mode
     cmds:
       - |
         npx prettier --write 'contracts/**/*.sol'
         npx prettier --write 'lib/**/*.sol'
-        npx prettier --write 'test/**/*.sol'
+
+  git:sub:reset:
+    desc: hard reset all submodules, foundry uses them to import deps
+    cmds:
+      - git submodule foreach --recursive git reset --hard

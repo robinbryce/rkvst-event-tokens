@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 library LibRKVSTReceiptTokensStorage {
-    struct Store {
+    struct Layout {
         uint256 initialised;
     }
 
@@ -11,10 +11,10 @@ library LibRKVSTReceiptTokensStorage {
             "RKVSTReceiptStorageStorage.github/robinbryce/rkvst-event-tokens"
         );
 
-    function store()
+    function layout()
         internal
         pure
-        returns (LibRKVSTReceiptTokensStorage.Store storage s)
+        returns (LibRKVSTReceiptTokensStorage.Layout storage s)
     {
         bytes32 slot = STORAGE_SLOT;
         assembly {
@@ -23,8 +23,8 @@ library LibRKVSTReceiptTokensStorage {
     }
 
     function _idempotentInit() internal {
-        LibRKVSTReceiptTokensStorage.Store
-            storage s = LibRKVSTReceiptTokensStorage.store();
+        LibRKVSTReceiptTokensStorage.Layout
+            storage s = LibRKVSTReceiptTokensStorage.layout();
         if (s.initialised == uint256(STORAGE_SLOT)) return;
 
         // TODO: initialisation

@@ -3,9 +3,8 @@
   "type": "module",
   "version": "0.0.1",
   "description": "Mint ERC1155 NFT's for RKVST event receipts on any evm compatible chain",
-  "main": "dist/rkvst-event-tokens.cjs.js",
-  "module": "dist/rkvst-event-tokens.esm.js",
-  "browser": "dist/rkvst-event-tokens.umd.js",
+  "main": "dist/index.js",
+  "types": "dist/types",
   "directories": {
     "lib": "lib",
     "contracts": "contracts",
@@ -22,11 +21,16 @@
     "@nomicfoundation/hardhat-foundry": "^1.0.1",
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@polysensus/diamond-deploy": "^0.1.11",
+    "@rollup/plugin-commonjs": "^24.1.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
     "@solidstate/contracts": "^0.0.54",
     "dotenv": "^16.0.3",
     "hardhat-deploy": "^0.11.26",
     "husky": "^8.0.3",
     "prettier": "^2.8.7",
-    "prettier-plugin-solidity": "^1.1.3"
+    "prettier-plugin-solidity": "^1.1.3",
+    "rollup": "^3.20.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4"
   }
 }

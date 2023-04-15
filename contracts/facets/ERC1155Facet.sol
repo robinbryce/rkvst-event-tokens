@@ -29,8 +29,8 @@ contract ERC1155Facet is
     function createReceiptToken(
         LibRKVSTReceiptTokens.TokenInitArgs calldata initArgs
     ) public whenNotPaused returns (uint256) {
-        LibRKVSTReceiptTokensStorage.Store
-            storage s = LibRKVSTReceiptTokensStorage.store();
+        LibRKVSTReceiptTokensStorage.Layout
+            storage s = LibRKVSTReceiptTokensStorage.layout();
 
         revert NotYetImplemented();
     }
