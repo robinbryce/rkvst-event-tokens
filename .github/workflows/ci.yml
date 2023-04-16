@@ -14,7 +14,9 @@ jobs:
           sh -c "$(curl --location https://taskfile.dev/install.sh)" -- \
             -d -b $GITHUB_WORKSPACE/bin
 
-          task bootstrap
+          echo "PATH=$GITHUB_WORKSPACE/bin:${{ env.PATH}}:" >> $GITHUB_ENV
+
+          $GITHUB_WORKSPACE/bin/task bootstrap
 
       - name: Setup node.js
         uses: actions/setup-node@v3
