@@ -39,9 +39,12 @@ jobs:
         run: npm install
 
       - name: build
-          run: task build
+        run: task build
+
+      - name: test
+        run: task test
 
       - name: integration test
-          run: |
-            task deploy:hh-prepare
-            task deploy:hh-new
+        run: |
+          task deploy:hh-prepare
+          task deploy:hh-new

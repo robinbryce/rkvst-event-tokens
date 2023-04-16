@@ -92,6 +92,11 @@ tasks:
           --exclude {{.FACETS_EXCLUDE}} \
           --format json | tee {{.DIAMOND_DEPLOY_JSON}}
 
+  test:
+    desc: run unit and integration tests
+    cmds:
+      - npx hardhat test
+
   deploy:hh:
     desc: clean and new deployment on hardhat
     cmds:
