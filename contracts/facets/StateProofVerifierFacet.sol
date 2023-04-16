@@ -40,22 +40,16 @@ contract StateProofVerifierFacet is IStateProofVerifier {
             );
     }
 
-    function verifyEIP1186(
+    function verifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
-        bytes32 _storageHash,
-        bytes calldata _rlpAccountProof,
-        bytes32[] calldata _slotKeyHashes,
-        bytes[] calldata _rlpStorageProofs
+        IStateProofVerifier.EIP1186Proof calldata proof
     ) external pure returns (Account memory) {
         return
-            LibStateProofVerifier.verifyEIP1186(
+            LibStateProofVerifier.verifyEIP1186Proof(
                 _accountHash,
                 _stateRootHash,
-                _storageHash,
-                _rlpAccountProof,
-                _slotKeyHashes,
-                _rlpStorageProofs
+                proof
             );
     }
 }

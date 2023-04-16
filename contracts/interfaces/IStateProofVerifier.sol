@@ -4,6 +4,17 @@ pragma solidity ^0.8.9;
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 
 interface IStateProofVerifier {
+    struct EIP1186Proof {
+        bytes rlpAccountProof;
+        EIP1186StorageProofs storageProofs;
+    }
+
+    struct EIP1186StorageProofs {
+        bytes32 storageHash;
+        bytes32[] slotKeyHashes;
+        bytes[] rlpStorageProofs;
+    }
+
     struct BlockHeader {
         bytes32 hash;
         bytes32 stateRootHash;
@@ -36,12 +47,9 @@ interface IStateProofVerifier {
         bytes calldata _rlpProof
     ) external pure returns (SlotValue memory);
 
-    function verifyEIP1186(
+    function verifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
-        bytes32 _storageHash,
-        bytes calldata _rlpAccountProof,
-        bytes32[] calldata _slotKeyHashes,
-        bytes[] calldata _rlpStorageProofs
+        EIP1186Proof calldata proof
     ) external pure returns (Account memory);
 }

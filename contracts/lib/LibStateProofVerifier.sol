@@ -29,21 +29,43 @@ library LibStateProofVerifier {
     uint256 constant HEADER_NUMBER_INDEX = 8;
     uint256 constant HEADER_TIMESTAMP_INDEX = 11;
 
-    function verifyEIP1186(
+    function verifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
-        bytes32 _storageHash,
-        bytes calldata _rlpAccountProof,
-        bytes32[] calldata _slotKeyHashes,
-        bytes[] calldata _rlpStorageProofs
+        IStateProofVerifier.EIP1186Proof calldata proof
     ) internal pure returns (IStateProofVerifier.Account memory) {
-        if (_slotKeyHashes.length != _rlpStorageProofs.length)
-            revert("slotKey count must match storage proof count");
+        if (
+            proof.storageProofs.slotKeyHashes.length !=
+            proof.storageProofs.rlpStorageProofs.length
+        ) revert("slotKey count must match storage proof count");
 
         IStateProofVerifier.Account memory account = LibStateProofVerifier
-            .proveAccountState(_accountHash, _stateRootHash, _rlpAccountProof);
+            .proveAccountState(
+                _accountHash,
+                _stateRootHash,
+                proof.rlpAccountProof
+            );
         // Make this a proof of existence, by requiring account.exists
         require(account.exists, "the account does not exist");
+
+        (bool exists, uint i) = LibStateProofVerifier.verifyStorageProofs(
+            proof.storageProofs.storageHash,
+            proof.storageProofs.slotKeyHashes,
+            proof.storageProofs.rlpStorageProofs,
+            true /*return true if all exist*/
+        );
+        if (!exists) revert EIP1186StorageValueMissing(i);
+        return account;
+    }
+
+    function verifyStorageProofs(
+        bytes32 _storageHash,
+        bytes32[] calldata _slotKeyHashes,
+        bytes[] calldata _rlpStorageProofs,
+        bool inclusionProof // set true to require that the values all exist
+    ) internal pure returns (bool, uint) {
+        if (_slotKeyHashes.length != _rlpStorageProofs.length)
+            revert("slotKey count must match storage proof count");
 
         for (uint i; i < _slotKeyHashes.length; i++) {
             IStateProofVerifier.SlotValue
@@ -53,9 +75,9 @@ library LibStateProofVerifier {
                     _rlpStorageProofs[i]
                 );
             // Make this a proof of existence
-            if (!slotValue.exists) revert EIP1186StorageValueMissing(i);
+            if (slotValue.exists != inclusionProof) return (false, i);
         }
-        return account;
+        return (true, _slotKeyHashes.length);
     }
 
     function proveAccountState(

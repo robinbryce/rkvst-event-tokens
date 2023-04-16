@@ -72,6 +72,7 @@ describe("Proof", function () {
     expect(slotValue?.exists).to.be.true;
   });
 
+  /*
   it("Should verify an eip 1186 proof", async function () {
     [proxyAddress, ownerAddress] = await loadFixture(
       deployRKVSTEventTokensFixture
@@ -111,6 +112,55 @@ describe("Proof", function () {
       slotKeys,
       rlpStorageProofs
     );
+    expect(accountState?.exists).to.be.true;
+  }); */
+
+  it("Should verify an eip 1186 proof (2)", async function () {
+    [proxyAddress, ownerAddress] = await loadFixture(
+      deployRKVSTEventTokensFixture
+    );
+    const tokens = createProxy(proxyAddress, ownerAddress);
+    expect(tokens).to.exist;
+
+    const eip1186Proof = rkvstreceipt.named_proofs[0].proof;
+
+    const accountAddressHash = keccak256(
+      ethers.utils.getAddress(rkvstreceipt.account)
+    );
+
+    // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
+    // for reference to the translation from eip 1186
+    const accountProof = eip1186Proof.accountProof.map((node) =>
+      ethers.utils.RLP.decode(node)
+    );
+
+    const rlpAccountProof = ethers.utils.RLP.encode(accountProof);
+
+    const slotKeyHashes = [];
+    const rlpStorageProofs = [];
+    for (const proof of eip1186Proof.storageProof) {
+      slotKeyHashes.push(keccak256(proof.key));
+      const decodedProof = proof.proof.map((node) =>
+        ethers.utils.RLP.decode(node)
+      );
+      rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
+    }
+
+    const proof = {
+      rlpAccountProof,
+      storageProofs: {
+        storageHash: eip1186Proof.storageHash,
+        slotKeyHashes,
+        rlpStorageProofs,
+      },
+    };
+
+    const accountState = await tokens.verifyEIP1186Proof(
+      accountAddressHash,
+      worldRoot,
+      proof
+    );
+
     expect(accountState?.exists).to.be.true;
   });
 });
