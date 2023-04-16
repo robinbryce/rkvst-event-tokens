@@ -27,6 +27,34 @@ library LibStateProofVerifier {
     uint256 constant HEADER_NUMBER_INDEX = 8;
     uint256 constant HEADER_TIMESTAMP_INDEX = 11;
 
+    function proveAccountState(
+        bytes32 _accountHash,
+        bytes32 _stateRootHash,
+        bytes calldata _rlpProof
+    ) internal pure returns (IStateProofVerifier.Account memory) {
+        RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
+        return
+            LibStateProofVerifier.extractAccountFromProof(
+                _accountHash,
+                _stateRootHash,
+                proof
+            );
+    }
+
+    function proveSlotValue(
+        bytes32 _slotHash,
+        bytes32 _storageRootHash,
+        bytes calldata _rlpProof
+    ) internal pure returns (IStateProofVerifier.SlotValue memory) {
+        RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
+        return
+            LibStateProofVerifier.extractSlotValueFromProof(
+                _slotHash,
+                _storageRootHash,
+                proof
+            );
+    }
+
     /**
      * @notice Parses block header and verifies its presence onchain within the latest 256 blocks.
      * @param _headerRlpBytes RLP-encoded block header.

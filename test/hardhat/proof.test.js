@@ -25,7 +25,7 @@ describe("Proof", function () {
     );
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
-    const account = ethers.utils.getAddress(rkvstreceipt.account);
+    const account = keccak256(ethers.utils.getAddress(rkvstreceipt.account));
 
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
     // for reference to the translation from eip 1186
@@ -52,7 +52,9 @@ describe("Proof", function () {
     );
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
-    const slotKey = rkvstreceipt.named_proofs[0].proof.storageProof[0].key;
+    const slotKey = keccak256(
+      rkvstreceipt.named_proofs[0].proof.storageProof[0].key
+    );
     const storageRootHash = rkvstreceipt.named_proofs[0].proof.storageHash;
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
     // for reference to the translation from eip 1186
@@ -68,6 +70,46 @@ describe("Proof", function () {
       rlpProof
     );
     expect(slotValue?.exists).to.be.true;
+  });
+
+  it("Should verify an eip 1186 proof", async function () {
+    [proxyAddress, ownerAddress] = await loadFixture(
+      deployRKVSTEventTokensFixture
+    );
+    const tokens = createProxy(proxyAddress, ownerAddress);
+    expect(tokens).to.exist;
+
+    const eip1186Proof = rkvstreceipt.named_proofs[0].proof;
+
+    const accountAddressHash = keccak256(
+      ethers.utils.getAddress(rkvstreceipt.account)
+    );
+
+    // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
+    // for reference to the translation from eip 1186
+    const accountProof = eip1186Proof.accountProof.map((node) =>
+      ethers.utils.RLP.decode(node)
+    );
+
+    const rlpAccountProof = ethers.utils.RLP.encode(accountProof);
+
+    const slotKeys = [];
+    const rlpStorageProofs = [];
+    for (const proof of eip1186Proof.storageProof) {
+      slotKeys.push(keccak256(proof.key));
+      const decodedProof = proof.proof.map((node) => ethers.utils.RLP.decode(node));
+      rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
+    }
+
+    const accountState = await tokens.verifyEIP1186(
+      accountAddressHash,
+      worldRoot,
+      eip1186Proof.storageHash,
+      rlpAccountProof,
+      slotKeys,
+      rlpStorageProofs
+    );
+    expect(accountState?.exists).to.be.true;
   });
 });
 
