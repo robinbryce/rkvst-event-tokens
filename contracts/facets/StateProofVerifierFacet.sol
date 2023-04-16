@@ -11,29 +11,37 @@ import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
 import {LibStateProofVerifier} from "../lib/LibStateProofVerifier.sol";
 
 contract StateProofVerifierFacet is IStateProofVerifier {
+    using RLPReader for RLPReader.RLPItem;
+    using RLPReader for bytes;
+
     function proveAccountState(
-        bytes32 _addressHash, // keccak256(abi.encodePacked(address))
+        address _address,
         bytes32 _stateRootHash,
-        RLPReader.RLPItem[] memory _proof
+        bytes calldata _rlpProof
     ) external pure returns (Account memory) {
+        RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
+        bytes32 _addressHash = keccak256(abi.encodePacked(_address));
+
         return
             LibStateProofVerifier.extractAccountFromProof(
                 _addressHash,
                 _stateRootHash,
-                _proof
+                proof
             );
     }
 
     function proveSlotValue(
-        bytes32 _slotHash,
+        bytes32 _slotKey,
         bytes32 _storageRootHash,
-        RLPReader.RLPItem[] memory _proof
+        bytes calldata _rlpProof
     ) external pure returns (SlotValue memory) {
+        RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
+        bytes32 slotHash = keccak256(bytes.concat(_slotKey));
         return
             LibStateProofVerifier.extractSlotValueFromProof(
-                _slotHash,
+                slotHash,
                 _storageRootHash,
-                _proof
+                proof
             );
     }
 }

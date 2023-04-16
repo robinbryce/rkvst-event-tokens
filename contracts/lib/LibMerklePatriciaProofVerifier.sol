@@ -9,6 +9,7 @@ pragma solidity ^0.8.9;
  *
  * NOTICE: This modified copy has not been audited. The changes are
  * - minor: renam to fit local repo conventions
+ * - minor: add revert strings
  */
 
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
@@ -46,7 +47,8 @@ library LibMerklePatriciaProofVerifier {
             // Root hash of empty Merkle-Patricia-Trie
             require(
                 rootHash ==
-                    0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421
+                    0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421,
+                "empty merkle root hash is wrong"
             );
             return new bytes(0);
         }
@@ -59,12 +61,12 @@ library LibMerklePatriciaProofVerifier {
 
             // The root node is hashed with Keccak-256 ...
             if (i == 0 && rootHash != stack[i].rlpBytesKeccak256()) {
-                revert();
+                revert("root hash mismatch");
             }
             // ... whereas all other nodes are hashed with the MPT
             // hash function.
             if (i != 0 && nodeHashHash != _mptHashHash(stack[i])) {
-                revert();
+                revert("interiour node hash mismatch");
             }
             // We verified that stack[i] has the correct hash, so we
             // may safely decode it.
@@ -101,7 +103,7 @@ library LibMerklePatriciaProofVerifier {
                     // Sanity check
                     if (i < stack.length - 1) {
                         // divergent node must come last in proof
-                        revert();
+                        revert("three");
                     }
 
                     return new bytes(0);
@@ -111,7 +113,7 @@ library LibMerklePatriciaProofVerifier {
                     // Sanity check
                     if (i < stack.length - 1) {
                         // leaf node must come last in proof
-                        revert();
+                        revert("four");
                     }
 
                     if (mptKeyOffset < mptKey.length) {
@@ -125,7 +127,7 @@ library LibMerklePatriciaProofVerifier {
                     // Sanity check
                     if (i == stack.length - 1) {
                         // shouldn't be at last level
-                        revert();
+                        revert("five");
                     }
 
                     if (!node[1].isList()) {
@@ -147,14 +149,14 @@ library LibMerklePatriciaProofVerifier {
                     mptKeyOffset += 1;
                     if (nibble >= 16) {
                         // each element of the path has to be a nibble
-                        revert();
+                        revert("six");
                     }
 
                     if (_isEmptyBytesequence(node[nibble])) {
                         // Sanity
                         if (i != stack.length - 1) {
                             // leaf node should be at last level
-                            revert();
+                            revert("seven");
                         }
 
                         return new bytes(0);
@@ -169,7 +171,7 @@ library LibMerklePatriciaProofVerifier {
                     // Sanity
                     if (i != stack.length - 1) {
                         // should be at last level
-                        revert();
+                        revert("eight");
                     }
 
                     return node[16].toBytes();

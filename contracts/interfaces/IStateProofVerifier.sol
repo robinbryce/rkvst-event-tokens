@@ -25,14 +25,14 @@ interface IStateProofVerifier {
     }
 
     function proveAccountState(
-        bytes32 _addressHash, // keccak256(abi.encodePacked(address))
+        address _address,
         bytes32 _stateRootHash,
-        RLPReader.RLPItem[] memory _proof
+        bytes calldata _rlpProof
     ) external pure returns (Account memory);
 
     function proveSlotValue(
-        bytes32 _slotHash,
+        bytes32 _slotKey,
         bytes32 _storageRootHash,
-        RLPReader.RLPItem[] memory _proof
+        bytes calldata _rlpProof
     ) external pure returns (SlotValue memory);
 }
