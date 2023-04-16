@@ -16,7 +16,6 @@ import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 import {LibMerklePatriciaProofVerifier} from "./LibMerklePatriciaProofVerifier.sol";
 
-error EIP1186StorageValueMissing(uint256 which);
 error EIP1186BatchVerifyFailed(uint256 which);
 
 /**
@@ -30,44 +29,17 @@ library LibStateProofVerifier {
     uint256 constant HEADER_NUMBER_INDEX = 8;
     uint256 constant HEADER_TIMESTAMP_INDEX = 11;
 
-    /*
-    function verifyEIP1186Proof(
-        bytes32 _accountHash,
-        bytes32 _stateRootHash,
-        IStateProofVerifier.EIP1186Proof calldata proof
-    ) internal pure returns (IStateProofVerifier.Account memory) {
-        if (
-            proof.storageProofs.slotKeyHashes.length !=
-            proof.storageProofs.rlpStorageProofs.length
-        ) revert("slotKey count must match storage proof count");
-
-        IStateProofVerifier.Account memory account = LibStateProofVerifier
-            .proveAccountState(
-                _accountHash,
-                _stateRootHash,
-                proof.rlpAccountProof
-            );
-        // Make this a proof of existence, by requiring account.exists
-        require(account.exists, "the account does not exist");
-
-        (bool exists, uint i) = LibStateProofVerifier.verifyStorageProofs(
-            proof.storageProofs.storageHash,
-            proof.storageProofs.slotKeyHashes,
-            proof.storageProofs.rlpStorageProofs,
-            true //return true if all exist
-        );
-        if (!exists) revert EIP1186StorageValueMissing(i);
-        return account;
-    }
-*/
     function batchVerifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
-        bytes calldata rlpAccountProof,
-        IStateProofVerifier.EIP1186StorageProofs[] calldata storageProofs
+        bytes memory rlpAccountProof,
+        IStateProofVerifier.EIP1186StorageProofs[] memory storageProofs
     ) internal pure returns (IStateProofVerifier.Account memory) {
         IStateProofVerifier.Account memory account = LibStateProofVerifier
             .proveAccountState(_accountHash, _stateRootHash, rlpAccountProof);
+
+        // Make this a proof of existence, by requiring account.exists
+        require(account.exists, "the account does not exist");
 
         for (uint i; i < storageProofs.length; i++) {
             if (
@@ -75,24 +47,22 @@ library LibStateProofVerifier {
                 storageProofs[i].rlpStorageProofs.length
             ) revert("slotKeyHases count must match storage proof count");
 
-            // Make this a proof of existence, by requiring account.exists
-            require(account.exists, "the account does not exist");
-
-            (bool exists, uint i) = LibStateProofVerifier.verifyStorageProofs(
-                storageProofs[i].storageHash,
-                storageProofs[i].slotKeyHashes,
-                storageProofs[i].rlpStorageProofs,
-                true /*return true if all exist*/
-            );
-            if (!exists) revert EIP1186BatchVerifyFailed(i);
+            (bool exists, uint ifailed) = LibStateProofVerifier
+                .verifyStorageProofs(
+                    storageProofs[i].storageHash,
+                    storageProofs[i].slotKeyHashes,
+                    storageProofs[i].rlpStorageProofs,
+                    true /*return true if all exist*/
+                );
+            if (!exists) revert EIP1186BatchVerifyFailed(ifailed);
         }
         return account;
     }
 
     function verifyStorageProofs(
         bytes32 _storageHash,
-        bytes32[] calldata _slotKeyHashes,
-        bytes[] calldata _rlpStorageProofs,
+        bytes32[] memory _slotKeyHashes,
+        bytes[] memory _rlpStorageProofs,
         bool inclusionProof // set true to require that the values all exist
     ) internal pure returns (bool, uint) {
         if (_slotKeyHashes.length != _rlpStorageProofs.length)
@@ -114,7 +84,7 @@ library LibStateProofVerifier {
     function proveAccountState(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
-        bytes calldata _rlpProof
+        bytes memory _rlpProof
     ) internal pure returns (IStateProofVerifier.Account memory) {
         RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
         return
@@ -128,7 +98,7 @@ library LibStateProofVerifier {
     function proveSlotValue(
         bytes32 _slotHash,
         bytes32 _storageRootHash,
-        bytes calldata _rlpProof
+        bytes memory _rlpProof
     ) internal pure returns (IStateProofVerifier.SlotValue memory) {
         RLPReader.RLPItem[] memory proof = _rlpProof.toRlpItem().toList();
         return

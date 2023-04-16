@@ -12,10 +12,17 @@ import {ModPausable} from "../lib/solidstate/security/ModPausable.sol";
 import {ModOwnable} from "../lib/solidstate/access/ownable/ModOwnable.sol";
 import {ContextMixin} from "../lib/contextmixin.sol";
 import {LibERC1155Storage} from "../lib/LibERC1155Storage.sol";
-import {LibRKVSTReceiptTokens} from "../lib/LibRKVSTReceiptTokens.sol";
+import {LibRKVSTReceiptTokens, receiptToken, isReceiptToken} from "../lib/LibRKVSTReceiptTokens.sol";
 import {LibRKVSTReceiptTokensStorage} from "../lib/LibRKVSTReceiptTokensStorage.sol";
 
+import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
+import {LibStateProofVerifier} from "../lib/LibStateProofVerifier.sol";
+
 error NotYetImplemented();
+error MintDataAbsent();
+error MintDataLength();
+error RecipientReceiptExists();
+error OneReceiptPerRecipient();
 
 contract ERC1155Facet is
     IRKVSTReceiptTokens,
@@ -24,15 +31,35 @@ contract ERC1155Facet is
     ModPausable,
     ContextMixin
 {
+    struct MintData {
+        bytes32 accountHash;
+        bytes32 worldRoot;
+        bytes rlpAccountProof;
+        IStateProofVerifier.EIP1186StorageProofs[] storageProofs;
+    }
+
     /// @notice creates a new receipt token
     /// @return returns the token id
     function createReceiptToken(
-        LibRKVSTReceiptTokens.TokenInitArgs calldata initArgs
+        // LibRKVSTReceiptTokens.TokenInitArgs calldata initArgs
+        uint128 eventIdentity,
+        string calldata tokenURI,
+        address account,
+        bytes32 worldRoot,
+        bytes calldata rlpAccountProof,
+        IStateProofVerifier.EIP1186StorageProofs[] calldata storageProofs
     ) public whenNotPaused returns (uint256) {
-        LibRKVSTReceiptTokensStorage.Layout
-            storage s = LibRKVSTReceiptTokensStorage.layout();
+        MintData[] memory mintData = new MintData[](1);
+        mintData[0].accountHash = keccak256(abi.encodePacked(account));
+        mintData[0].worldRoot = worldRoot;
+        mintData[0].rlpAccountProof = rlpAccountProof;
+        mintData[0].storageProofs = storageProofs;
+        bytes memory data = abi.encode(mintData);
 
-        revert NotYetImplemented();
+        uint256 id = receiptToken(eventIdentity);
+        _mint(_msgSender(), id, 1, data);
+
+        return id;
     }
 
     /**
@@ -48,12 +75,7 @@ contract ERC1155Facet is
         ERC1155MetadataStorage.layout().baseURI = newuri;
     }
 
-    /**
-     whole event proofs mint
-     one attribute for a single event mint
-
-     */
-
+    /* Don't currently support a general mint
     function mint(
         address account,
         uint256 id,
@@ -71,6 +93,7 @@ contract ERC1155Facet is
     ) public whenNotPaused onlyOwner {
         _mintBatch(to, ids, amounts, data);
     }
+    */
 
     function _beforeTokenTransfer(
         address operator,
@@ -80,6 +103,30 @@ contract ERC1155Facet is
         uint256[] memory amounts,
         bytes memory data // whenNotPaused
     ) internal override {
+        if (from != address(0)) {
+            super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+            return;
+        }
+
+        MintData[] memory mintData = abi.decode(data, (MintData[]));
+        if (mintData.length != ids.length) revert MintDataLength();
+
+        for (uint i; i < ids.length; i++) {
+            if (isReceiptToken(ids[i])) continue;
+
+            // receipt tokens are 1 per owner
+            uint256 balance = _balanceOf(to, ids[i]);
+            if (balance != 0) revert RecipientReceiptExists();
+            if (amounts[i] != 1) revert OneReceiptPerRecipient();
+
+            LibStateProofVerifier.batchVerifyEIP1186Proof(
+                mintData[i].accountHash,
+                mintData[i].worldRoot,
+                mintData[i].rlpAccountProof,
+                mintData[i].storageProofs
+            );
+        }
+
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 

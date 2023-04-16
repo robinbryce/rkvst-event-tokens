@@ -14,20 +14,6 @@ contract StateProofVerifierFacet is IStateProofVerifier {
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
 
-    /*
-    function verifyEIP1186Proof(
-        bytes32 _accountHash,
-        bytes32 _stateRootHash,
-        IStateProofVerifier.EIP1186Proof calldata proof
-    ) external pure returns (Account memory) {
-        return
-            LibStateProofVerifier.verifyEIP1186Proof(
-                _accountHash,
-                _stateRootHash,
-                proof
-            );
-    }*/
-
     function batchVerifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,

@@ -12,7 +12,7 @@ export const facetABIs = {
   DiamondLoupeFacet: DiamondLoupeFacetSol.abi,
   OwnershipFacet: OwnershipFacetSol.abi,
   StateProofVerifierFacet: StateProofVerifierFacetSol.abi,
-  ERC1155FacetSol: ERC1155FacetSol.abi,
+  ERC1155Facet: ERC1155FacetSol.abi,
 };
 
 export function createProxy(diamondAddress, providerOrSigner) {

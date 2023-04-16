@@ -30,12 +30,6 @@ interface IStateProofVerifier {
         uint256 value;
     }
 
-    // function verifyEIP1186Proof(
-    //     bytes32 _accountHash,
-    //     bytes32 _stateRootHash,
-    //     EIP1186Proof calldata proof
-    // ) external pure returns (Account memory);
-
     /// @notice batchVerify a list of EIP1186 proofs for the same account and
     /// world state root.
     function batchVerifyEIP1186Proof(

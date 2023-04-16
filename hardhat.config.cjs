@@ -28,9 +28,15 @@ module.exports = {
     version: "0.8.18",
     settings: {
       // hh does not support re-mappings yet
+      viaIR: true,
       optimizer: {
         enabled: true,
         runs: 20,
+        details: {
+          yulDetails: {
+            optimizerSteps: "u:",
+          }
+        }
       },
     },
   },
