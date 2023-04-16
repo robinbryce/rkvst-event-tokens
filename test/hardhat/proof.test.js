@@ -167,7 +167,7 @@ describe("Proof", function () {
     const iface = tokens.getFacetInterface("ERC1155Facet");
     const event = iface.parseLog(r.logs[0]);
     const hardhat1Address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-    expect(event.name).to.equal('TransferSingle');
+    expect(event.name).to.equal("TransferSingle");
     expect(event.args.to).to.equal(hardhat1Address);
     expectGoodStatus(r);
   });
