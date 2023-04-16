@@ -36,7 +36,8 @@ contract ERC1155Facet is
     }
 
     /**
-     * @dev This is used instead of msg.sender as transactions won't be sent by the original token owner, but by OpenSea.
+     * @dev This is used instead of msg.sender as transactions won't be sent by
+     * the original token owner, but by OpenSea.
      * ref: https://docs.opensea.io/docs/polygon-basic-integration
      */
     function _msgSender() internal view returns (address sender) {
@@ -46,6 +47,12 @@ contract ERC1155Facet is
     function setURI(string memory newuri) public whenNotPaused onlyOwner {
         ERC1155MetadataStorage.layout().baseURI = newuri;
     }
+
+    /**
+     whole event proofs mint
+     one attribute for a single event mint
+
+     */
 
     function mint(
         address account,

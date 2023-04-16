@@ -5,7 +5,7 @@ import commonjs from '@rollup/plugin-commonjs';
 export default [
 	// browser-friendly UMD build
 	{
-		input: '.local/rollup/out-tsc',
+		input: ['.local/rollup/out-tsc', 'src/erc2535proxy.js'],
 		output: {
 			dir: 'dist'
 		},

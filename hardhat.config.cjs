@@ -38,14 +38,13 @@ module.exports = {
     // using hardhat-foundry to get hh to work with foundry & get the benefit
     // of source remappings. this means using sources here is redundant.
     // sources: "chaintrap",
-    tests: "./test",
+    tests: "./test/hardhat",
     cache: ".local/hardhat/cache",
     artifacts: ".local/hardhat/artifacts",
   },
   mocha: {
-    spec: ["test/**/*.hh.js"],
+    spec: ["test/hardhat/**/*.test.js"],
     watch: true,
-    "watch-files": ["test/lib/**/*.js", "test/**/*.hh.js"],
-    "watch-ignore": ["src"],
+    "watch-files": ["src/**/*.js", "test/hardhat/**/*.js"],
   },
 };
