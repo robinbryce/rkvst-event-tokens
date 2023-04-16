@@ -16,6 +16,8 @@ import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
 import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 import {LibMerklePatriciaProofVerifier} from "./LibMerklePatriciaProofVerifier.sol";
 
+error EIP1186StorageValueMissing(uint256 which);
+
 /**
  * @title A helper library for verification of Merkle Patricia account and state proofs.
  */
@@ -26,6 +28,35 @@ library LibStateProofVerifier {
     uint256 constant HEADER_STATE_ROOT_INDEX = 3;
     uint256 constant HEADER_NUMBER_INDEX = 8;
     uint256 constant HEADER_TIMESTAMP_INDEX = 11;
+
+    function verifyEIP1186(
+        bytes32 _accountHash,
+        bytes32 _stateRootHash,
+        bytes32 _storageHash,
+        bytes calldata _rlpAccountProof,
+        bytes32[] calldata _slotKeyHashes,
+        bytes[] calldata _rlpStorageProofs
+    ) internal pure returns (IStateProofVerifier.Account memory) {
+        if (_slotKeyHashes.length != _rlpStorageProofs.length)
+            revert("slotKey count must match storage proof count");
+
+        IStateProofVerifier.Account memory account = LibStateProofVerifier
+            .proveAccountState(_accountHash, _stateRootHash, _rlpAccountProof);
+        // Make this a proof of existence, by requiring account.exists
+        require(account.exists, "the account does not exist");
+
+        for (uint i; i < _slotKeyHashes.length; i++) {
+            IStateProofVerifier.SlotValue
+                memory slotValue = LibStateProofVerifier.proveSlotValue(
+                    _slotKeyHashes[i],
+                    _storageHash,
+                    _rlpStorageProofs[i]
+                );
+            // Make this a proof of existence
+            if (!slotValue.exists) revert EIP1186StorageValueMissing(i);
+        }
+        return account;
+    }
 
     function proveAccountState(
         bytes32 _accountHash,

@@ -97,7 +97,9 @@ describe("Proof", function () {
     const rlpStorageProofs = [];
     for (const proof of eip1186Proof.storageProof) {
       slotKeys.push(keccak256(proof.key));
-      const decodedProof = proof.proof.map((node) => ethers.utils.RLP.decode(node));
+      const decodedProof = proof.proof.map((node) =>
+        ethers.utils.RLP.decode(node)
+      );
       rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
     }
 

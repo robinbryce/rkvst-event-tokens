@@ -10,8 +10,6 @@ import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
 import {LibStateProofVerifier} from "../lib/LibStateProofVerifier.sol";
 
-error EIP1186StorageValueMissing(uint256 which);
-
 contract StateProofVerifierFacet is IStateProofVerifier {
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
@@ -50,26 +48,14 @@ contract StateProofVerifierFacet is IStateProofVerifier {
         bytes32[] calldata _slotKeyHashes,
         bytes[] calldata _rlpStorageProofs
     ) external pure returns (Account memory) {
-        if (_slotKeyHashes.length != _rlpStorageProofs.length)
-            revert("slotKey count must match storage proof count");
-
-        Account memory account = LibStateProofVerifier.proveAccountState(
-            _accountHash,
-            _stateRootHash,
-            _rlpAccountProof
-        );
-        // Make this a proof of existence, by requiring account.exists
-        require(account.exists, "the account does not exist");
-
-        for (uint i; i < _slotKeyHashes.length; i++) {
-            SlotValue memory slotValue = LibStateProofVerifier.proveSlotValue(
-                _slotKeyHashes[i],
+        return
+            LibStateProofVerifier.verifyEIP1186(
+                _accountHash,
+                _stateRootHash,
                 _storageHash,
-                _rlpStorageProofs[i]
+                _rlpAccountProof,
+                _slotKeyHashes,
+                _rlpStorageProofs
             );
-            // Make this a proof of existence
-            if (!slotValue.exists) revert EIP1186StorageValueMissing(i);
-        }
-        return account;
     }
 }
