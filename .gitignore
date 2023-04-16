@@ -5,6 +5,5 @@ dist
 # forge build creates this, don't know why. it is unrelated to our use of '.local'
 local
 
-.vscode
 .env.*
 typechain-types

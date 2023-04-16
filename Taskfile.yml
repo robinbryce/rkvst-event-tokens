@@ -152,6 +152,8 @@ tasks:
       - |
         npx prettier --write 'contracts/**/*.sol'
         npx prettier --write 'lib/**/*.sol'
+        npx prettier --write 'src/**/*.js'
+        npx prettier --write 'test/**/*.js'
   publish:
     desc: publish the package to npm (use -- --dry-run to pre flight)
     cmds:

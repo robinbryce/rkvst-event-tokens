@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx prettier --check 'contracts/**/*.sol'
+# npx prettier --check 'contracts/**/*.sol'
+task format
