@@ -94,28 +94,36 @@ describe("Proof", function () {
 
     const rlpAccountProof = ethers.utils.RLP.encode(accountProof);
 
-    const slotKeys = [];
+    const slotKeyHashes = [];
     const rlpStorageProofs = [];
     for (const proof of eip1186Proof.storageProof) {
-      slotKeys.push(keccak256(proof.key));
+      slotKeyHashes.push(keccak256(proof.key));
       const decodedProof = proof.proof.map((node) =>
         ethers.utils.RLP.decode(node)
       );
       rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
     }
 
-    const accountState = await tokens.verifyEIP1186(
+    const proof = {
+      rlpAccountProof,
+      storageProofs: {
+        storageHash: eip1186Proof.storageHash,
+        slotKeyHashes,
+        rlpStorageProofs,
+      },
+    };
+
+    const accountState = await tokens.verifyEIP1186Proof(
       accountAddressHash,
       worldRoot,
-      eip1186Proof.storageHash,
-      rlpAccountProof,
-      slotKeys,
-      rlpStorageProofs
+      proof
     );
-    expect(accountState?.exists).to.be.true;
-  }); */
 
-  it("Should verify an eip 1186 proof (2)", async function () {
+    expect(accountState?.exists).to.be.true;
+  });
+  */
+
+  it("Should verify an eip 1186 proof list with one element", async function () {
     [proxyAddress, ownerAddress] = await loadFixture(
       deployRKVSTEventTokensFixture
     );
@@ -146,19 +154,17 @@ describe("Proof", function () {
       rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
     }
 
-    const proof = {
-      rlpAccountProof,
-      storageProofs: {
-        storageHash: eip1186Proof.storageHash,
-        slotKeyHashes,
-        rlpStorageProofs,
-      },
+    const storageProofs = {
+      storageHash: eip1186Proof.storageHash,
+      slotKeyHashes,
+      rlpStorageProofs,
     };
 
-    const accountState = await tokens.verifyEIP1186Proof(
+    const accountState = await tokens.batchVerifyEIP1186Proof(
       accountAddressHash,
       worldRoot,
-      proof
+      rlpAccountProof,
+      [storageProofs]
     );
 
     expect(accountState?.exists).to.be.true;

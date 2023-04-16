@@ -17,6 +17,7 @@ import {RLPReader} from "solidity-rlp/contracts/RLPReader.sol";
 import {LibMerklePatriciaProofVerifier} from "./LibMerklePatriciaProofVerifier.sol";
 
 error EIP1186StorageValueMissing(uint256 which);
+error EIP1186BatchVerifyFailed(uint256 which);
 
 /**
  * @title A helper library for verification of Merkle Patricia account and state proofs.
@@ -29,6 +30,7 @@ library LibStateProofVerifier {
     uint256 constant HEADER_NUMBER_INDEX = 8;
     uint256 constant HEADER_TIMESTAMP_INDEX = 11;
 
+    /*
     function verifyEIP1186Proof(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
@@ -52,9 +54,38 @@ library LibStateProofVerifier {
             proof.storageProofs.storageHash,
             proof.storageProofs.slotKeyHashes,
             proof.storageProofs.rlpStorageProofs,
-            true /*return true if all exist*/
+            true //return true if all exist
         );
         if (!exists) revert EIP1186StorageValueMissing(i);
+        return account;
+    }
+*/
+    function batchVerifyEIP1186Proof(
+        bytes32 _accountHash,
+        bytes32 _stateRootHash,
+        bytes calldata rlpAccountProof,
+        IStateProofVerifier.EIP1186StorageProofs[] calldata storageProofs
+    ) internal pure returns (IStateProofVerifier.Account memory) {
+        IStateProofVerifier.Account memory account = LibStateProofVerifier
+            .proveAccountState(_accountHash, _stateRootHash, rlpAccountProof);
+
+        for (uint i; i < storageProofs.length; i++) {
+            if (
+                storageProofs[i].slotKeyHashes.length !=
+                storageProofs[i].rlpStorageProofs.length
+            ) revert("slotKeyHases count must match storage proof count");
+
+            // Make this a proof of existence, by requiring account.exists
+            require(account.exists, "the account does not exist");
+
+            (bool exists, uint i) = LibStateProofVerifier.verifyStorageProofs(
+                storageProofs[i].storageHash,
+                storageProofs[i].slotKeyHashes,
+                storageProofs[i].rlpStorageProofs,
+                true /*return true if all exist*/
+            );
+            if (!exists) revert EIP1186BatchVerifyFailed(i);
+        }
         return account;
     }
 

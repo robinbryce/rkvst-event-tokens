@@ -14,6 +14,35 @@ contract StateProofVerifierFacet is IStateProofVerifier {
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for bytes;
 
+    /*
+    function verifyEIP1186Proof(
+        bytes32 _accountHash,
+        bytes32 _stateRootHash,
+        IStateProofVerifier.EIP1186Proof calldata proof
+    ) external pure returns (Account memory) {
+        return
+            LibStateProofVerifier.verifyEIP1186Proof(
+                _accountHash,
+                _stateRootHash,
+                proof
+            );
+    }*/
+
+    function batchVerifyEIP1186Proof(
+        bytes32 _accountHash,
+        bytes32 _stateRootHash,
+        bytes calldata rlpAccountProof,
+        EIP1186StorageProofs[] calldata storageProofs
+    ) external pure returns (Account memory) {
+        return
+            LibStateProofVerifier.batchVerifyEIP1186Proof(
+                _accountHash,
+                _stateRootHash,
+                rlpAccountProof,
+                storageProofs
+            );
+    }
+
     function proveAccountState(
         bytes32 _accountHash,
         bytes32 _stateRootHash,
@@ -37,19 +66,6 @@ contract StateProofVerifierFacet is IStateProofVerifier {
                 _slotHash,
                 _storageRootHash,
                 _rlpProof
-            );
-    }
-
-    function verifyEIP1186Proof(
-        bytes32 _accountHash,
-        bytes32 _stateRootHash,
-        IStateProofVerifier.EIP1186Proof calldata proof
-    ) external pure returns (Account memory) {
-        return
-            LibStateProofVerifier.verifyEIP1186Proof(
-                _accountHash,
-                _stateRootHash,
-                proof
             );
     }
 }
