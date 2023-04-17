@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 library LibERC1155Storage {
     struct Layout {
         uint256 initialised;
+        uint128 receiptNonce;
     }
 
     bytes32 internal constant STORAGE_SLOT =
@@ -26,5 +27,6 @@ library LibERC1155Storage {
 
         // TODO: initialisation
         s.initialised = uint256(STORAGE_SLOT);
+        s.receiptNonce = 1;
     }
 }

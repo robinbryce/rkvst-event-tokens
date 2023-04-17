@@ -115,6 +115,24 @@ tasks:
               '[{"typeURIs": []}]' \
             -f {{.DIAMOND_DEPLOY_JSON}}
 
+  deploy:mumbai-up:
+    desc: upgrade the mumbai deployment
+    dotenv: [".env", ".env.local", ".env.deploy"]
+    cmds:
+      - |
+
+        npx diamond-deploy \
+          -u "{{.MUMBAI_URL}}" \
+          -d "${DEPLOY_ACCOUNT_KEY}" \
+          diamond-up \
+            --diamond-address "${DIAMOND_ADDRESS_MUMBAI}" \
+            --replace \
+            --gaslimit 3500000 \
+            --legacy \
+            --diamond-owner-key "${OWNER_ACCOUNT_KEY}" \
+            --ignore-names DiamondNew \
+            -f {{.DIAMOND_DEPLOY_JSON}} \
+            --dry-run
 
   deploy:hh:
     desc: clean and new deployment on hardhat

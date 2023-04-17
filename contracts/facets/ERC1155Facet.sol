@@ -12,7 +12,7 @@ import {ModPausable} from "../lib/solidstate/security/ModPausable.sol";
 import {ModOwnable} from "../lib/solidstate/access/ownable/ModOwnable.sol";
 import {ContextMixin} from "../lib/contextmixin.sol";
 import {LibERC1155Storage} from "../lib/LibERC1155Storage.sol";
-import {LibRKVSTReceiptTokens, receiptToken, isReceiptToken} from "../lib/LibRKVSTReceiptTokens.sol";
+import {LibRKVSTReceiptTokens, receiptToken} from "../lib/LibRKVSTReceiptTokens.sol";
 import {LibRKVSTReceiptTokensStorage} from "../lib/LibRKVSTReceiptTokensStorage.sol";
 
 import {IStateProofVerifier} from "../interfaces/IStateProofVerifier.sol";
@@ -21,8 +21,7 @@ import {LibStateProofVerifier} from "../lib/LibStateProofVerifier.sol";
 error NotYetImplemented();
 error MintDataAbsent();
 error MintDataLength();
-error RecipientReceiptExists();
-error OneReceiptPerRecipient();
+error OneReceiptPerToken();
 
 contract ERC1155Facet is
     IRKVSTReceiptTokens,
@@ -49,6 +48,8 @@ contract ERC1155Facet is
         bytes calldata rlpAccountProof,
         IStateProofVerifier.EIP1186StorageProofs[] calldata storageProofs
     ) public whenNotPaused returns (uint256) {
+        LibERC1155Storage.Layout storage s = LibERC1155Storage.layout();
+
         MintData[] memory mintData = new MintData[](1);
         mintData[0].accountHash = keccak256(abi.encodePacked(account));
         mintData[0].worldRoot = worldRoot;
@@ -56,8 +57,15 @@ contract ERC1155Facet is
         mintData[0].storageProofs = storageProofs;
         bytes memory data = abi.encode(mintData);
 
-        uint256 id = receiptToken(eventIdentity);
+        uint256 id = receiptToken(s.receiptNonce, eventIdentity);
+
+        s.receiptNonce++;
+
         _mint(_msgSender(), id, 1, data);
+
+        if (bytes(tokenURI).length > 0) {
+            _setTokenURI(id, tokenURI);
+        }
 
         return id;
     }
@@ -104,6 +112,9 @@ contract ERC1155Facet is
         bytes memory data // whenNotPaused
     ) internal override {
         if (from != address(0)) {
+            for (uint i; i < ids.length; i++) {
+                if (amounts[i] != 1) revert OneReceiptPerToken();
+            }
             super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
             return;
         }
@@ -112,12 +123,7 @@ contract ERC1155Facet is
         if (mintData.length != ids.length) revert MintDataLength();
 
         for (uint i; i < ids.length; i++) {
-            if (isReceiptToken(ids[i])) continue;
-
-            // receipt tokens are 1 per owner
-            uint256 balance = _balanceOf(to, ids[i]);
-            if (balance != 0) revert RecipientReceiptExists();
-            if (amounts[i] != 1) revert OneReceiptPerRecipient();
+            if (amounts[i] != 1) revert OneReceiptPerToken();
 
             LibStateProofVerifier.batchVerifyEIP1186Proof(
                 mintData[i].accountHash,
