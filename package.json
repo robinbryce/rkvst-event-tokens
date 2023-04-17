@@ -1,7 +1,7 @@
 {
   "name": "rkvst-event-tokens",
   "type": "module",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Mint ERC1155 NFT's for RKVST event receipts on any evm compatible chain",
   "main": "dist/index.js",
   "types": "dist/types",
