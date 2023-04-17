@@ -49,6 +49,7 @@ module.exports = {
     artifacts: ".local/hardhat/artifacts",
   },
   mocha: {
+    timeout: 120000,
     spec: ["test/hardhat/**/*.test.js"],
     watch: true,
     "watch-files": ["src/**/*.js", "test/hardhat/**/*.js"],

@@ -10,7 +10,8 @@ import { deployRKVSTEventTokensFixture } from "./deploy.js";
 import { createProxy } from "./proxy.js";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
-import rkvstreceipt from "./data/rkvst-receipt.json" assert { type: "json" };
+import rkvstreceipt1 from "./data/rkvst-receipt.json" assert { type: "json" };
+import rkvstreceipt2 from "./data/rkvst-receipt2.json" assert { type: "json" };
 import pkg from "./data/rkvst-receipt-worldroot.json" assert { type: "json" };
 const { worldRoot } = pkg;
 // import eip1186proof from "data/eip1186-proof.json" assert { type: "json" };
@@ -25,11 +26,11 @@ describe("Proof", function () {
     );
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
-    const account = keccak256(ethers.utils.getAddress(rkvstreceipt.account));
+    const account = keccak256(ethers.utils.getAddress(rkvstreceipt1.account));
 
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
     // for reference to the translation from eip 1186
-    const accountProof = rkvstreceipt.named_proofs[0].proof.accountProof.map(
+    const accountProof = rkvstreceipt1.named_proofs[0].proof.accountProof.map(
       (node) => ethers.utils.RLP.decode(node)
     );
 
@@ -53,12 +54,12 @@ describe("Proof", function () {
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
     const slotKey = keccak256(
-      rkvstreceipt.named_proofs[0].proof.storageProof[0].key
+      rkvstreceipt1.named_proofs[0].proof.storageProof[0].key
     );
-    const storageRootHash = rkvstreceipt.named_proofs[0].proof.storageHash;
+    const storageRootHash = rkvstreceipt1.named_proofs[0].proof.storageHash;
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
     // for reference to the translation from eip 1186
-    const proof = rkvstreceipt.named_proofs[0].proof.storageProof[0].proof.map(
+    const proof = rkvstreceipt1.named_proofs[0].proof.storageProof[0].proof.map(
       (node) => ethers.utils.RLP.decode(node)
     );
 
@@ -79,10 +80,10 @@ describe("Proof", function () {
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
 
-    const eip1186Proof = rkvstreceipt.named_proofs[0].proof;
+    const eip1186Proof = rkvstreceipt1.named_proofs[0].proof;
 
     const accountAddressHash = keccak256(
-      ethers.utils.getAddress(rkvstreceipt.account)
+      ethers.utils.getAddress(rkvstreceipt1.account)
     );
 
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
@@ -126,9 +127,9 @@ describe("Proof", function () {
     const tokens = createProxy(proxyAddress, ownerAddress);
     expect(tokens).to.exist;
 
-    const eip1186Proof = rkvstreceipt.named_proofs[0].proof;
+    const eip1186Proof = rkvstreceipt1.named_proofs[0].proof;
 
-    const account = ethers.utils.getAddress(rkvstreceipt.account);
+    const account = ethers.utils.getAddress(rkvstreceipt1.account);
 
     // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
     // for reference to the translation from eip 1186
@@ -171,6 +172,64 @@ describe("Proof", function () {
     expect(event.args.to).to.equal(hardhat1Address);
     expectGoodStatus(r);
   });
+  it("Should mint proving all named proofs", async function () {
+    [proxyAddress, ownerAddress] = await loadFixture(
+      deployRKVSTEventTokensFixture
+    );
+    const tokens = createProxy(proxyAddress, ownerAddress);
+    expect(tokens).to.exist;
+
+    const eip1186Proof2 = rkvstreceipt2.named_proofs[0].proof;
+
+    const account = ethers.utils.getAddress(rkvstreceipt2.account);
+
+    // see https://github.com/lidofinance/curve-merkle-oracle/blob/1033b3e84142317ffd8f366b52e489d5eb49c73f/offchain/state_proof.py
+    // for reference to the translation from eip 1186
+    const accountProof = eip1186Proof2.accountProof.map((node) =>
+      ethers.utils.RLP.decode(node)
+    );
+
+    const rlpAccountProof = ethers.utils.RLP.encode(accountProof);
+
+	  const storageProofs = [];
+	  for (const namedProof of rkvstreceipt2.named_proofs) {
+
+      const slotKeyHashes = [];
+      const rlpStorageProofs = [];
+      for (const proof of namedProof.proof.storageProof) {
+        slotKeyHashes.push(keccak256(proof.key));
+        const decodedProof = proof.proof.map((node) =>
+          ethers.utils.RLP.decode(node)
+        );
+        rlpStorageProofs.push(ethers.utils.RLP.encode(decodedProof));
+      }
+
+      storageProofs.push({
+        storageHash: namedProof.proof.storageHash,
+        slotKeyHashes,
+        rlpStorageProofs,
+      });
+    }
+
+    const tx = await tokens.createReceiptToken(
+      bigFrom("0x01"), // eventIdentity:
+      "a-token-{id}", // tokenURL:
+      account,
+      worldRoot,
+      rlpAccountProof,
+      storageProofs
+    );
+
+    const r = await tx.wait();
+    const iface = tokens.getFacetInterface("ERC1155Facet");
+    const event = iface.parseLog(r.logs[0]);
+    const hardhat1Address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    expect(event.name).to.equal("TransferSingle");
+    expect(event.args.to).to.equal(hardhat1Address);
+    expectGoodStatus(r);
+  });
+
+
 });
 
 function expectGoodStatus(r, msg) {
