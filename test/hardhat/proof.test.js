@@ -191,9 +191,8 @@ describe("Proof", function () {
 
     const rlpAccountProof = ethers.utils.RLP.encode(accountProof);
 
-	  const storageProofs = [];
-	  for (const namedProof of rkvstreceipt2.named_proofs) {
-
+    const storageProofs = [];
+    for (const namedProof of rkvstreceipt2.named_proofs) {
       const slotKeyHashes = [];
       const rlpStorageProofs = [];
       for (const proof of namedProof.proof.storageProof) {
@@ -228,8 +227,6 @@ describe("Proof", function () {
     expect(event.args.to).to.equal(hardhat1Address);
     expectGoodStatus(r);
   });
-
-
 });
 
 function expectGoodStatus(r, msg) {
