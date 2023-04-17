@@ -19,13 +19,15 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/*.d.ts"
-    }
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./abi/*.json": "./abi/*.json"
   },
   "typesVersions": {
     ">4.0": {
       ".": [
-        "./dist/*.d.ts"
+        "./dist/types/*.d.ts"
       ]
     }
   },
